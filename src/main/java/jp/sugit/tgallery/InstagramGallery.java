@@ -48,7 +48,7 @@ public final class InstagramGallery {
             }
             JsonNode captionNode = item.get("caption");
             String caption = captionNode == null || captionNode.isNull() ? "" : captionNode.asText("");
-            posts.add(new Picture(id, caption, permalink, "/picture_" + id + ".jpg"));
+            posts.add(new Picture(id, caption, permalink, "picture_" + id + ".jpg"));
         }
         // Java の sort は乱数 Comparator を受け付けないので、意図どおりの無作為順は shuffle で作る。
         Collections.shuffle(posts, random);
