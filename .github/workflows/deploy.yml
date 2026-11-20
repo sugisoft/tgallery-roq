@@ -17,6 +17,7 @@ jobs:
     env:
       IG_TOKEN: ${{ secrets.IG_TOKEN }}             # Required at startup. Do not print it.
       GALLERY_GA_ID: ${{ secrets.GALLERY_GA_ID }}   # Optional. Empty means no analytics tag.
+      QUARKUS_HTTP_ROOT_PATH: /tgallery-roq
     steps:
       - uses: actions/checkout@v6
         with:
