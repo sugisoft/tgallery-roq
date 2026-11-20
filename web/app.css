@@ -1,0 +1,115 @@
+html {
+  background-color: black;
+}
+
+body {
+  padding: 0;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  color: cornsilk;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.container {
+  padding: 0 1rem;
+}
+
+.main {
+  padding: 0;
+}
+
+.footer {
+  display: flex;
+  flex: 1;
+  margin: 1rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.footer a {
+  display: flex;
+  justify-content: right;
+  align-items: right;
+  flex-grow: 1;
+}
+
+.pictures {
+  text-align: center;
+  font-size: 0;
+}
+
+.pictures img {
+  width: 24vw;
+  height: 24vw;
+}
+
+.description {
+  margin: 0 1rem;
+  padding-bottom: 1rem;
+  display: inline-block;
+  width: 22em;
+  text-align: right;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 0.8em;
+}
+
+.profile {
+  width: 90vw;
+  margin-left: auto;
+  margin-right: 0;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  text-align: right;
+}
+
+.username {
+  display: inline-block;
+  text-align: center;
+  font-size: 0.9em;
+  vertical-align: top;
+}
+
+.name {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.name img {
+  vertical-align: middle;
+}
+
+.profilePicture {
+  border-radius: 50%;
+}
+
+.missing {
+  margin: 2rem 1rem;
+}
+
+@media (max-width: 600px) {
+  .main {
+    padding: 0;
+  }
+  .container {
+    padding: 0;
+  }
+  .pictures img {
+    width: 45vw;
+    height: 45vw;
+  }
+  .profile {
+    width: 100vw;
+  }
+  .username {
+    margin-right: 1rem;
+  }
+}

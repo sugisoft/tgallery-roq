@@ -1,0 +1,16 @@
+{@io.quarkiverse.roq.frontmatter.runtime.model.Page page}
+{@io.quarkiverse.roq.frontmatter.runtime.model.Site site}
+<!DOCTYPE html>
+<html lang="ja" style="background: black url(/back.jpg) no-repeat left top;">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {#seo page site /}
+  {#favicon site /}
+  {#bundle /}
+  {#ga4 tag=cdi:gallery.ga4Tag /}
+</head>
+<body>
+  {#insert /}
+</body>
+</html>

@@ -1,0 +1,9 @@
+target/
+node_modules/
+.idea/
+*.iml
+.vscode/
+.DS_Store
+.env
+.env.*
+public/picture_*.jpg
