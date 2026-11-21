@@ -70,7 +70,7 @@ public class Pictures {
             }
             paths.add(SelectedPath.builder()
                     .path(picture.media_url())
-                    .outputPath(SquareWebp.fileName(picture.id()))
+                    .outputPath(picture.media_url())
                     .build());
         }
         return new RoqSelection(paths);

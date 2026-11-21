@@ -36,6 +36,7 @@ class InstagramGalleryTest {
         assertEquals(first, second);
         assertTrue(first.stream().allMatch(picture -> picture.permalink().contains("/p/")));
         assertTrue(first.stream().allMatch(picture -> picture.mediaUrl().equals(SquareWebp.fileName(picture.id()))));
+        assertTrue(first.stream().allMatch(picture -> picture.mediaUrl().startsWith("/" + SquareWebp.DIRECTORY + "/")));
         assertTrue(first.stream().noneMatch(picture -> picture.id().equals("1") || picture.id().equals("nope")));
         InstagramGallery.Picture nullCaptionPicture = InstagramGallery.select(mapper.createArrayNode().add(nullCaption), 20, new Random(0)).get(0);
         assertEquals("", nullCaptionPicture.caption());

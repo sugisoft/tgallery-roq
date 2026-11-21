@@ -19,7 +19,7 @@ public class PictureMemoryRoute {
 
     void register(@Observes Router router) {
         // FILE_EXTENSION is ".webp". The backslash keeps the dot from matching any character.
-        router.getWithRegex("/picture_([0-9]+)\\" + SquareWebp.FILE_EXTENSION).order(0).handler(ctx -> {
+        router.getWithRegex("/" + SquareWebp.DIRECTORY + "/picture_([0-9]+)\\" + SquareWebp.FILE_EXTENSION).order(0).handler(ctx -> {
             String id = ctx.pathParam("param0");
             byte[] image = pictures.image(id);
             if (image == null) {

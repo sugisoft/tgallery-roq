@@ -26,6 +26,7 @@ import com.luciad.imageio.webp.WebPWriteParam;
 public final class SquareWebp {
 
     public static final int SIZE = 480;
+    public static final String DIRECTORY = "pictures";
     public static final String FILE_EXTENSION = ".webp";
     public static final String CONTENT_TYPE = "image/webp";
 
@@ -41,8 +42,9 @@ public final class SquareWebp {
     private SquareWebp() {
     }
 
+    /** Site path written under {@code /pictures} when the static site is generated. */
     public static String fileName(String id) {
-        return "picture_" + id + FILE_EXTENSION;
+        return "/" + DIRECTORY + "/picture_" + id + FILE_EXTENSION;
     }
 
     public static byte[] toSquare(byte[] source) throws IOException {
