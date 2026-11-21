@@ -25,6 +25,7 @@ a {
 
 .main {
   padding: 0;
+  container-type: inline-size;
 }
 
 .footer {
@@ -50,6 +51,26 @@ a {
 .pictures img {
   width: 24vw;
   height: 24vw;
+}
+
+/* 親が 4枚×24vw（96vw）より狭いと横は3枚になる。24vw のままだと行が 72vw で、2枚・4枚より余白が広い。 */
+@container (width < 96vw) {
+  .pictures {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pictures a {
+    display: block;
+    min-width: 0;
+  }
+
+  .pictures img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    display: block;
+  }
 }
 
 .description {
@@ -102,9 +123,17 @@ a {
   .container {
     padding: 0;
   }
+  .pictures {
+    display: block;
+  }
+  .pictures a {
+    display: inline;
+  }
   .pictures img {
     width: 45vw;
     height: 45vw;
+    aspect-ratio: auto;
+    display: inline;
   }
   .profile {
     width: 100vw;
