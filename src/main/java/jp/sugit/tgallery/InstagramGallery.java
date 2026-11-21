@@ -48,7 +48,7 @@ public final class InstagramGallery {
             }
             JsonNode captionNode = item.get("caption");
             String caption = captionNode == null || captionNode.isNull() ? "" : captionNode.asText("");
-            posts.add(new Picture(id, caption, permalink, "picture_" + id + ".jpg"));
+            posts.add(new Picture(id, caption, permalink, SquareWebp.fileName(id)));
         }
         // Java の sort は乱数 Comparator を受け付けないので、意図どおりの無作為順は shuffle で作る。
         Collections.shuffle(posts, random);
@@ -62,8 +62,8 @@ public final class InstagramGallery {
     }
 
     /**
-     * Downloads the selected images into memory. Nothing is written under {@code public/},
-     * so Quarkus dev mode does not treat the download as a source change.
+     * Downloads the selected images into memory as 480px square WebP.
+     * Nothing is written under {@code public/}, so Quarkus dev mode does not treat the download as a source change.
      */
     public Fetched fetchIntoMemory(String token) throws IOException, InterruptedException {
         JsonNode data = media(token);
@@ -114,6 +114,10 @@ public final class InstagramGallery {
         if (response.statusCode() != 200) {
             throw new IllegalStateException("Image download failed for id " + picture.id() + ": HTTP " + response.statusCode());
         }
-        return response.body();
+        try {
+            return SquareWebp.toSquare(response.body());
+        } catch (IOException e) {
+            throw new IOException("Could not convert image " + picture.id() + " to WebP", e);
+        }
     }
 }

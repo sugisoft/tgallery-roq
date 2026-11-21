@@ -18,7 +18,8 @@ public class PictureMemoryRoute {
     Pictures pictures;
 
     void register(@Observes Router router) {
-        router.getWithRegex("/picture_([0-9]+)\\.jpg").order(0).handler(ctx -> {
+        // FILE_EXTENSION is ".webp". The backslash keeps the dot from matching any character.
+        router.getWithRegex("/picture_([0-9]+)\\" + SquareWebp.FILE_EXTENSION).order(0).handler(ctx -> {
             String id = ctx.pathParam("param0");
             byte[] image = pictures.image(id);
             if (image == null) {
@@ -27,7 +28,7 @@ public class PictureMemoryRoute {
             }
             ctx.response()
                     .setStatusCode(200)
-                    .putHeader("Content-Type", "image/jpeg")
+                    .putHeader("Content-Type", SquareWebp.CONTENT_TYPE)
                     .end(Buffer.buffer(image));
         });
     }

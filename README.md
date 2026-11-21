@@ -21,7 +21,7 @@ QUARKUS_ROQ_GENERATOR_BATCH=true ./mvnw package quarkus:run -DskipTests -Dsite.u
 
 生成物は `target/roq` です。起動時にメモリへ取った一覧と画像から静的ファイルを作ります。`IG_TOKEN` が空だと失敗します。
 
-画像はメモリ上にあり、静的生成のとき `target/roq` へ書き出します。
+画像はメモリ上にあり、静的生成のとき `target/roq` へ書き出します。取得した画像は、短い辺いっぱいに収まる最大の正方形を中央から切り出し、歪ませず 480×480 の WebP にします。
 
 ## 公開
 
