@@ -9,7 +9,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 @Named("gallery")
 public class GalleryConfig {
 
-    @ConfigProperty(name = "gallery.ga-id", defaultValue = "")
+    @ConfigProperty(name = "gallery.ga.id", defaultValue = "")
     String gaId;
 
     public String ga4Tag() {

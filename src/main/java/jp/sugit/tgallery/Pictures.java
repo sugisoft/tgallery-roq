@@ -23,6 +23,8 @@ import io.quarkiverse.roq.generator.runtime.SelectedPath;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.Startup;
 
+import org.eclipse.microprofile.config.ConfigProvider;
+
 /**
  * Picture list held in memory for {@code cdi:pictures}. Quarkus loads it at startup,
  * which is also when {@code quarkus:run} generates the static site.
@@ -42,6 +44,8 @@ public class Pictures {
 
     public record Picture(String id, String caption, String permalink, String media_url) {
     }
+
+    private final static String IG_TOKEN = ConfigProvider.getConfig().getValue("ig.token", String.class);
 
     @PostConstruct
     void loadOnStartup() {
@@ -95,11 +99,10 @@ public class Pictures {
             LOG.infof("Loaded %d pictures into memory from the test fixture", fixture.items().size());
             return fixture;
         }
-        String token = System.getenv("IG_TOKEN");
-        if (token == null || token.isBlank()) {
+        if (Pictures.IG_TOKEN == null || Pictures.IG_TOKEN.isBlank()) {
             throw new IllegalStateException("IG_TOKEN is required");
         }
-        return fetchInstagram(token);
+        return fetchInstagram(Pictures.IG_TOKEN);
     }
 
     private static Snapshot fetchInstagram(String token) {
