@@ -4,7 +4,8 @@ on:
   push:
     branches: [ main ]   # Switch to the branch which should be deployed to GitHub Pages
   schedule:
-    - cron: "0 5 * * *"  # Runs every day at 05:00 UTC to publish scheduled content
+    - cron: "29 * * * *"  # Runs every day at 05:00 UTC to publish scheduled content
+      timezone: "Asia/Tokyo"  # Change to your preferred timezone
   workflow_dispatch:
 
 jobs:
