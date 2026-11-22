@@ -94,7 +94,7 @@
                     <systemPropertyVariables>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <maven.home>${maven.home}</maven.home>
-                        <gallery.ga-id>G-TEST123456</gallery.ga-id>
+                        <gallery.ga.id>G-TEST123456</gallery.ga.id>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
