@@ -30,17 +30,15 @@ a {
 
 .footer {
   display: flex;
+  flex-direction: column;
   flex: 1;
   margin: 1rem;
   justify-content: center;
-  align-items: center;
-}
-
-.footer a {
-  display: flex;
-  justify-content: right;
-  align-items: right;
-  flex-grow: 1;
+  align-items: flex-end;
+  text-align: right;
+  gap: 0.25rem;
+  font-family: Georgia, Times New Roman, Times, serif;
+  font-size: .8em;
 }
 
 .pictures {
