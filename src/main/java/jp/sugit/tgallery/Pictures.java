@@ -3,7 +3,6 @@ package jp.sugit.tgallery;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +10,7 @@ import java.util.Map;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 import org.jboss.logging.Logger;
@@ -22,6 +22,9 @@ import io.quarkiverse.roq.generator.runtime.RoqSelection;
 import io.quarkiverse.roq.generator.runtime.SelectedPath;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.Startup;
+import io.vertx.core.http.HttpClientOptions;
+import io.vertx.mutiny.core.Vertx;
+import io.vertx.mutiny.core.http.HttpClient;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 
@@ -41,6 +44,9 @@ public class Pictures {
     private final Object lock = new Object();
     private volatile Snapshot snapshot = Snapshot.EMPTY;
     private boolean loaded;
+
+    @Inject
+    Vertx vertx;
 
     public record Picture(String id, String caption, String permalink, String media_url) {
     }
@@ -93,7 +99,7 @@ public class Pictures {
         }
     }
 
-    private static Snapshot load() {
+    private Snapshot load() {
         if (LaunchMode.current() == LaunchMode.TEST) {
             Snapshot fixture = readResource(FIXTURE);
             LOG.infof("Loaded %d pictures into memory from the test fixture", fixture.items().size());
@@ -105,12 +111,10 @@ public class Pictures {
         return fetchInstagram(Pictures.IG_TOKEN);
     }
 
-    private static Snapshot fetchInstagram(String token) {
-        HttpClient client = HttpClient.newBuilder()
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .connectTimeout(Duration.ofSeconds(20))
-                .build();
-        try (client) {
+    private Snapshot fetchInstagram(String token) {
+        HttpClient client = vertx.createHttpClient(new HttpClientOptions()
+                .setConnectTimeout((int) Duration.ofSeconds(20).toMillis()));
+        try {
             InstagramGallery.Fetched fetched = new InstagramGallery(client).fetchIntoMemory(token);
             List<Picture> items = fetched.pictures().stream()
                     .map(picture -> new Picture(picture.id(), picture.caption(), picture.permalink(), picture.mediaUrl()))
@@ -122,6 +126,8 @@ public class Pictures {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Instagram fetch was interrupted", e);
+        } finally {
+            client.closeAndAwait();
         }
     }
 
