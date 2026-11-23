@@ -3,7 +3,6 @@ package jp.sugit.tgallery;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +21,6 @@ import io.quarkiverse.roq.generator.runtime.RoqSelection;
 import io.quarkiverse.roq.generator.runtime.SelectedPath;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.Startup;
-import io.vertx.core.http.HttpClientOptions;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.http.HttpClient;
 
@@ -112,8 +110,7 @@ public class Pictures {
     }
 
     private Snapshot fetchInstagram(String token) {
-        HttpClient client = vertx.createHttpClient(new HttpClientOptions()
-                .setConnectTimeout((int) Duration.ofSeconds(20).toMillis()));
+        HttpClient client = InstagramGallery.createClient(vertx);
         try {
             InstagramGallery.Fetched fetched = new InstagramGallery(client).fetchIntoMemory(token);
             List<Picture> items = fetched.pictures().stream()

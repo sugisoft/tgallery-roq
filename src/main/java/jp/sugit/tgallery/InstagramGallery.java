@@ -17,8 +17,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
+import io.smallrye.mutiny.subscription.UniEmitter;
+import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.PoolOptions;
 import io.vertx.core.http.RequestOptions;
+import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.core.http.HttpClient;
 import io.vertx.mutiny.core.http.HttpClientRequest;
@@ -41,6 +46,13 @@ public final class InstagramGallery {
     InstagramGallery(HttpClient client, String mediaEndpoint) {
         this.client = client;
         this.mediaEndpoint = mediaEndpoint;
+    }
+
+    /** Pool size matches {@link #LIMIT} so every selected picture can be in flight at once. */
+    static HttpClient createClient(Vertx vertx) {
+        return vertx.createHttpClient(
+                new HttpClientOptions().setConnectTimeout((int) Duration.ofSeconds(20).toMillis()),
+                new PoolOptions().setHttp1MaxSize(LIMIT));
     }
 
     public record Picture(String id, String caption, String permalink, String mediaUrl) {
@@ -82,9 +94,17 @@ public final class InstagramGallery {
     public Fetched fetchIntoMemory(String token) throws IOException, InterruptedException {
         JsonNode data = media(token);
         List<Picture> pictures = select(data, LIMIT, new Random());
+        if (pictures.isEmpty()) {
+            return new Fetched(List.of(), Map.of());
+        }
+        // Subscribe to every download before waiting, so the images are fetched together.
+        List<Uni<byte[]>> downloads = pictures.stream()
+                .map(picture -> downloadBytes(picture, data))
+                .toList();
+        List<byte[]> bodies = await(Uni.join().all(downloads).andFailFast(), IMAGE_TIMEOUT);
         Map<String, byte[]> images = new LinkedHashMap<>();
-        for (Picture picture : pictures) {
-            images.put(picture.id(), downloadBytes(picture, data));
+        for (int i = 0; i < pictures.size(); i++) {
+            images.put(pictures.get(i).id(), bodies.get(i));
         }
         return new Fetched(List.copyOf(pictures), Map.copyOf(images));
     }
@@ -92,8 +112,8 @@ public final class InstagramGallery {
     private JsonNode media(String token) throws IOException, InterruptedException {
         String query = "fields=" + URLEncoder.encode("id,caption,media_url,permalink", StandardCharsets.UTF_8)
                 + "&access_token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
-        Reply reply = get(mediaEndpoint + "?" + query, MEDIA_TIMEOUT,
-                request -> request.putHeader("Accept", "application/json"));
+        Reply reply = await(fetch(mediaEndpoint + "?" + query, MEDIA_TIMEOUT,
+                request -> request.putHeader("Accept", "application/json")), MEDIA_TIMEOUT);
         if (reply.statusCode() != 200) {
             throw new IllegalStateException("Instagram media request failed: HTTP " + reply.statusCode());
         }
@@ -104,7 +124,7 @@ public final class InstagramGallery {
         return root.get("data");
     }
 
-    private byte[] downloadBytes(Picture picture, JsonNode data) throws IOException, InterruptedException {
+    private Uni<byte[]> downloadBytes(Picture picture, JsonNode data) {
         String source = null;
         for (JsonNode item : data) {
             if (picture.id().equals(item.path("id").asText())) {
@@ -113,23 +133,33 @@ public final class InstagramGallery {
             }
         }
         if (source == null || source.isBlank()) {
-            throw new IllegalStateException("Instagram image is missing for id " + picture.id());
+            return Uni.createFrom().failure(
+                    new IllegalStateException("Instagram image is missing for id " + picture.id()));
         }
-        Reply reply = get(source, IMAGE_TIMEOUT, request -> request.putHeader("User-Agent", "tgallery-roq"));
+        return fetch(source, IMAGE_TIMEOUT, request -> request.putHeader("User-Agent", "tgallery-roq"))
+                .flatMap(reply -> encode(picture, reply));
+    }
+
+    private Uni<byte[]> encode(Picture picture, Reply reply) {
         if (reply.statusCode() != 200) {
-            throw new IllegalStateException("Image download failed for id " + picture.id() + ": HTTP " + reply.statusCode());
+            return Uni.createFrom().failure(new IllegalStateException(
+                    "Image download failed for id " + picture.id() + ": HTTP " + reply.statusCode()));
         }
-        try {
-            return SquareWebp.toSquare(reply.body().getBytes());
-        } catch (IOException e) {
-            throw new IOException("Could not convert image " + picture.id() + " to WebP", e);
-        }
+        byte[] raw = reply.body().getBytes();
+        // WebP encoding is CPU work. Keep it off the event loop that reads the responses.
+        return Uni.createFrom().emitter((UniEmitter<? super byte[]> emitter) -> {
+            try {
+                emitter.complete(SquareWebp.toSquare(raw));
+            } catch (IOException e) {
+                emitter.fail(new IOException("Could not convert image " + picture.id() + " to WebP", e));
+            }
+        }).runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
     /** GET that follows redirects. {@code timeout} bounds the whole call, including the body. */
-    private Reply get(String uri, Duration timeout, Consumer<HttpClientRequest> configure) throws IOException, InterruptedException {
+    private Uni<Reply> fetch(String uri, Duration timeout, Consumer<HttpClientRequest> configure) {
         // request(method, string) sets the path only and leaves the host at localhost:80.
-        Uni<Reply> call = client.request(new RequestOptions()
+        return client.request(new RequestOptions()
                         .setMethod(HttpMethod.GET)
                         .setAbsoluteURI(uri)
                         .setFollowRedirects(true)
@@ -140,7 +170,6 @@ public final class InstagramGallery {
                 })
                 .flatMap(response -> response.body()
                         .map(body -> new Reply(response.statusCode(), body == null ? Buffer.buffer() : body)));
-        return await(call, timeout);
     }
 
     private static <T> T await(Uni<T> uni, Duration timeout) throws IOException, InterruptedException {
